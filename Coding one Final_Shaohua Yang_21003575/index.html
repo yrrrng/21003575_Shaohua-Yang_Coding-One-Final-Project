@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <script>window.onerror = function(error, url, line) {parent.postMessage(["console", "❌ -- [ERROR] -- ❌ -- ⚠️ " + error], "*")};var cl = console.log;console.log = function () {var msg = [...arguments].join();parent.postMessage(["console", msg], "*");  }  </script><script crossorigin src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js">
+</script>
+
+ <script src = "https://mimicproject.com/libs/maximilian.js">
+</script>
+
+ <script crossorigin src = "orbitControls.js">
+</script>   
+ <meta charset="utf-8">  <style>
+  body {
+   margin: 0px;
+   background-color: #000000;
+   overflow: hidden;
+  }
+ </style>
+</head>
+<body>
+ <script id="vertexShader" type="x-shader/x-vertex">
+  void main() { gl_Position = vec4( position, 1.0 ); }
+
+</script>
+ <script id="fragmentShader" type="x-shader/x-fragment">
+
+    precision highp float;
+
+    uniform float time;
+    uniform vec2 mouse;
+    uniform vec2 resolution;
+
+    float random(vec2 pos) {
+    return fract(sin(dot(pos.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+}
+
+    float noise(vec2 pos) {
+    vec2 i = floor(pos);
+    vec2 f = fract(pos);
+    float a = random(i + vec2(0.0, 0.0));
+    float b = random(i + vec2(0.0, 0.0));
+    float c = random(i + vec2(1.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (2.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+    void main( void ) {
+
+ vec2 position = ( gl_FragCoord.xy / resolution.xy ) * time*10.1 * mouse ;
+
+ float color = 10.0;
+ 
+ color = noise(position);
+  
+ gl_FragColor = vec4(vec3(sin(color* 1.0 - time)+sin(mouse.x),tan(color*190.2 - time)+cos(mouse.y),color),10.0);
+
+}
+ 
+
+
+</script>
+ <script>
+
+    var maximJs = maximilian(); 
+    var maxiAudio = new maximJs.maxiAudio(); 
+    var kick = new maximJs.maxiSample();
+    var snare = new maximJs.maxiSample();
+    var hat = new maximJs.maxiSample();
+    var clap = new maximJs.maxiSample(); 
+    var elec = new maximJs.maxiSample();
+    var myClock = new maximJs.maxiClock();
+    var myOsc = new maximJs.maxiOsc();
+    var my2Osc = new maximJs.maxiOsc();
+    var kickGain = 1.5;
+    
+    maxiAudio.init();
+    maxiAudio.loadSample('0001.mp3', kick); 
+    maxiAudio.loadSample('0002.mp3', snare); 
+    maxiAudio.loadSample('0003.mp3', hat);  
+  
+    var myTempo = 1200;
+    var ticks = 5;
+    myClock.setTempo(myTempo);
+    myClock.setTicksPerBeat(ticks);
+
+    maxiAudio.play = function() {
+    myClock.ticker();
+    
+    if(myClock.ticker && myClock.playHead&1 == 4){
+      kick.trigger();
+      kickGain = 0.2;
+    }
+    if(myClock.tricker && myClock.playHead&1 == 1){
+      snare.trigger();
+    }
+    if(myClock.tricker && myClock.playHead&1 == 5){
+      hat.trigger();
+    } 
+    if(myClock.tricker && myClock.playHead&1 == 1){
+      clap.trigger();
+    }  var out = kickGain+kick.play(myOsc.coswave(0.1)) + snare.play() + hat.play();
+    return out * 0.8;
+  }   //change the resolution here. 1 is highest
+    var pixel_resolution = 0.2;
+    var container, stats;
+    var camera, scene, renderer;
+    var uniforms;
+        
+ init();
+ animate();
+ function init() {
+ camera = new THREE.Camera();
+ camera.position.z = 1.5;
+ scene = new THREE.Scene();
+ var geometry = new THREE.PlaneBufferGeometry(2, 2);
+ uniforms = { time: { type: 'f', value: 1.0 }, resolution: { type: 'v2', value: new THREE.Vector2() }, mouse: {type: "v2", value: new THREE.Vector2()}};
+    var material = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: document.getElementById('vertexShader').textContent, fragmentShader: document.getElementById('fragmentShader').textContent });
+ var mesh = new THREE.Mesh(geometry, material);
+ scene.add(mesh);
+ renderer = new THREE.WebGLRenderer();
+ //Hack here to change resolution 
+ renderer.setPixelRatio(window.devicePixelRatio / pixel_resolution);
+ document.body.appendChild(renderer.domElement);
+ onWindowResize();
+ window.addEventListener('resize', onWindowResize, false);
+ window.addEventListener('mousemove', onMouseMove, false);
+
+  }
+ function onWindowResize(event) {
+ renderer.setSize(window.innerWidth, window.innerHeight);
+ uniforms.resolution.value.x = renderer.domElement.width;
+ uniforms.resolution.value.y = renderer.domElement.height;
+
+  }
+ function animate() {
+ requestAnimationFrame(animate);
+ render();
+  }
+ function onMouseMove( event ) {
+    uniforms.mouse.value.x = 2 * ( event.clientX / window.innerWidth );
+  uniforms.mouse.value.y = 5 * ( 1-(event.clientY) /       window.innerHeight
+          );
+        }
+ function render() {
+ uniforms.time.value += 0.05;
+ renderer.render(scene, camera);
+  }
+     
+
+</script>
+</body>
+</html>
